@@ -8,8 +8,9 @@ const char* password = "";
 const char* mqtt_server = ""; 
 const char* mqtt_user = "";
 const char* mqtt_pass= "";
-const u_int16_t mqtt_port = 1883;
+const char* mqtt_topic = "amq.topic";
 
+const u_int16_t mqtt_port = 1883;
 const u_int16_t diffTime = 3600;
 const u_int16_t sleepTimeInMinutes = 60;
 
@@ -34,8 +35,33 @@ time_t lastWateredPlant3 = time(0);
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+
+void callback(char* topic, byte* message, unsigned int length) {
+  Serial.print("Message arrived on topic: ");
+  Serial.print(topic);
+  Serial.print(". Message: ");
+  String messageTemp;
+  
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)message[i]);
+    messageTemp += (char)message[i];
+  }
+  Serial.println();
+
+ 
+  if (String(topic) == mqtt_topic) {
+    Serial.print("Changing output to ");
+    if(messageTemp == "on"){
+      Serial.println("on");
+    }
+    else if(messageTemp == "off"){
+      Serial.println("off");
+    }
+  }
+}
+
+
 void setup_wifi() {
-  // Connecting to a WiFi network
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -51,7 +77,10 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     if (client.connect("Arduino_Gas", mqtt_user, mqtt_pass)) {
+
       Serial.println("connected");
+      client.subscribe(mqtt_topic);
+
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -78,6 +107,7 @@ void pump_water(int pump_number){
   pinMode(pump_number, INPUT_PULLUP); 
   delay(1000);
  }
+
 void loop() {
   char msg1[32];
   char msg2[32];
@@ -94,7 +124,7 @@ void loop() {
     lastWateredPlant1 = time(0);
   }
 
-  soilMoistureValue2 = analogRead(SensorPin2);  //put Sensor insert into soil
+  soilMoistureValue2 = analogRead(SensorPin2);
   soilMoistureValue2 = map(soilMoistureValue2, 3550, 1346, 0, 100);
   Serial.println(soilMoistureValue2);
 
@@ -103,7 +133,7 @@ void loop() {
     lastWateredPlant2 = time(0);
   }
 
-  soilMoistureValue3 = analogRead(SensorPin3);  //put Sensor insert into soil
+  soilMoistureValue3 = analogRead(SensorPin3);  
   soilMoistureValue3 = map(soilMoistureValue3, 2800, 1200, 0, 100);
   Serial.println(soilMoistureValue3);
 
@@ -116,9 +146,9 @@ void loop() {
   sprintf(msg2, "plant2:%d", soilMoistureValue2);
   sprintf(msg3, "plant3:%d", soilMoistureValue3);
 
-  client.publish("amq.topic",  msg1);
-  client.publish("amq.topic",  msg2);
-  client.publish("amq.topic",  msg3);
+  client.publish(mqtt_topic,  msg1)
+  client.publish(mqtt_topic,  msg2);
+  client.publish(mqtt_topic,  msg3);
 
   delay(1000  * 1 * sleepTimeInMinutes);
 }
