@@ -18,18 +18,21 @@ const int SensorPin1 = 33;
 const int SensorPin2 = 34;
 const int SensorPin3 = 35;
 
-const int pump1 = 23;
-const int pump2 = 26;
-const int pump3 = 27;
+const u_int16_t pump1 = 23;
+const u_int16_t pump2 = 26;
+const u_int16_t pump3 = 27;
 
-int soilMoistureValue1 = 0;
-int soilMoistureValue2 = 0;
-int soilMoistureValue3 = 0;
-
+u_int16_t soilMoistureValue1 = 0;
+u_int16_t soilMoistureValue2 = 0;
+u_int16_t soilMoistureValue3 = 0;
 
 time_t lastWateredPlant1 = time(0);
 time_t lastWateredPlant2 = time(0);
 time_t lastWateredPlant3 = time(0);
+
+u_int16_t thresholdPlant1 = 50;
+u_int16_t thresholdPlant2 = 50;
+u_int16_t thresholdPlant3 = 50;
 
 
 WiFiClient espClient;
@@ -37,25 +40,22 @@ PubSubClient client(espClient);
 
 
 void callback(char* topic, byte* message, unsigned int length) {
-  Serial.print("Message arrived on topic: ");
-  Serial.print(topic);
-  Serial.print(". Message: ");
-  String messageTemp;
-  
+  String messageTemp;  
   for (int i = 0; i < length; i++) {
-    Serial.print((char)message[i]);
     messageTemp += (char)message[i];
   }
-  Serial.println();
-
- 
-  if (String(topic) == mqtt_topic) {
-    Serial.print("Changing output to ");
-    if(messageTemp == "on"){
-      Serial.println("on");
+  if (String(topic) == 'esp.in') {
+    if(messageTemp == "plant1"){
+      pump_water(pump1);
     }
-    else if(messageTemp == "off"){
-      Serial.println("off");
+    else if(messageTemp == "plant2"){
+      pump_water(pump2);
+    }
+    else if(messageTemp == "plant3"){
+      pump_water(pump3);
+    }
+    else{
+      print("Bad Input");
     }
   }
 }
@@ -76,11 +76,10 @@ void reconnect() {
   Serial.println("In reconnect...");
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
+
     if (client.connect("Arduino_Gas", mqtt_user, mqtt_pass)) {
-
       Serial.println("connected");
-      client.subscribe(mqtt_topic);
-
+      client.subscribe('esp.in');
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -101,7 +100,6 @@ void setup() {
 }
 
 void pump_water(int pump_number){
-  Serial.println("watering");
   pinMode(pump_number, OUTPUT);
   delay(5000);  
   pinMode(pump_number, INPUT_PULLUP); 
