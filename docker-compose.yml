@@ -10,3 +10,16 @@ services:
     volumes:
         - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
         - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+  mongo:
+    image : andresvidal/rpi3-mongodb3:latest
+    container_name: mongo
+    environment:
+        - PUID=1000
+        - PGID=1000
+    ports:
+        - 27017:27017
+    restart: unless-stopped
+
+    volumes:
+      - /data/db:/data/db
+      - /data/configdb:/data/configdb
