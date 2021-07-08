@@ -9,13 +9,12 @@ from collections import deque
 import pika
 import sys
 import threading
-from datetime import datetime
-
+from time import gmtime, strftime
 
 MAXLEN = 30
 
 X_AXIS = deque(maxlen=MAXLEN)
-X_AXIS.append(datetime.now().strftime('%H:%M'))
+X_AXIS.append(strftime("%H:%M", gmtime()))
 
 Plant1_Y = deque(maxlen=MAXLEN)
 Plant2_Y = deque(maxlen=MAXLEN)
@@ -27,10 +26,10 @@ Plant3_Y.append(0)
 
 def callback(ch, method, properties, body):
     if body.decode().startswith('plant'):
-        time = datetime.now().strftime('%H:%M')
+        time = strftime("%H:%M", gmtime())
         if time not in X_AXIS:
-            X_AXIS.append(time)
-            
+            X_AXIS.append(time) 
+
         if body.decode().startswith('plant1'):
             Plant1_Y.append(int(body.decode().split(':')[-1]))
 
@@ -52,7 +51,7 @@ channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=T
 
 thread = threading.Thread(target = channel.start_consuming)
 
-app = dash.Dash(__name__) 
+app = dash.Dash(_name_) 
 app.layout = html.Div(
     [
         dcc.Graph(id='live-graph', animate=True),
@@ -82,6 +81,6 @@ def update_graph_scatter(input_data):
     return {'data': [data_plant_1, data_plant_2, data_plant_3],
             'layout' : go.Layout(xaxis=dict(range=[min(X),max(X)]),yaxis=dict(range=[0,100]),)}
 
-if __name__ == '__main__':
+if _name_ == '_main_':
     thread.start()
     app.run_server(host='0.0.0.0', port=8080)
