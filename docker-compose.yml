@@ -1,12 +1,24 @@
-version: "3.6"
+version: '3.6'
 services:
-  rabbitmq:
-    image: rabbitmq:management
-    container_name: 'rabbitmq'
-    ports:
-        - 5672:5672
-        - 15672:15672
-        - 1883:1883
-    volumes:
-        - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
-        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmqw
+ rabbitmq:
+   image: rabbitmq:management
+   container_name: 'rabbitmq'
+   ports:
+       - 5672:5672
+       - 15672:15672
+       - 1883:1883
+   volumes:
+       - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+       - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+ database:
+   image : andresvidal/rpi3-mongodb3:latest
+   container_name: 'mongo_watering'
+   environment:
+     - MONGO_INITDB_DATABASE=plant_watering
+     - MONGO_INITDB_ROOT_USERNAME=$USER
+     - MONGO_INITDB_ROOT_PASSWORD=$PASSWORD
+
+   volumes:
+     - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+   ports:
+     - '27017-27019:27017-27019'

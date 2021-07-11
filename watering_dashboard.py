@@ -10,11 +10,15 @@ import pika
 import sys
 import threading
 from time import gmtime, strftime
+from datetime import datetime
+
+
 
 MAXLEN = 30
 
 X_AXIS = deque(maxlen=MAXLEN)
-X_AXIS.append(strftime("%H:%M", gmtime()))
+time = datetime.now()
+X_AXIS.append(time.strftime('%H:%M'))
 
 Plant1_Y = deque(maxlen=MAXLEN)
 Plant2_Y = deque(maxlen=MAXLEN)
@@ -26,10 +30,9 @@ Plant3_Y.append(0)
 
 def callback(ch, method, properties, body):
     if body.decode().startswith('plant'):
-        time = strftime("%H:%M", gmtime())
+        time = datetime.now().strftime('%H:%M')
         if time not in X_AXIS:
-            X_AXIS.append(time) 
-
+            X_AXIS.append(time)
         if body.decode().startswith('plant1'):
             Plant1_Y.append(int(body.decode().split(':')[-1]))
 
@@ -39,7 +42,7 @@ def callback(ch, method, properties, body):
         if body.decode().startswith('plant3'):
             Plant3_Y.append(int(body.decode().split(':')[-1]))
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=30000))
+connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
 channel = connection.channel()
 
 channel.exchange_declare(exchange='amq.topic', exchange_type='topic', durable=True)
@@ -51,7 +54,7 @@ channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=T
 
 thread = threading.Thread(target = channel.start_consuming)
 
-app = dash.Dash(_name_) 
+app = dash.Dash(__name__) 
 app.layout = html.Div(
     [
         dcc.Graph(id='live-graph', animate=True),
@@ -81,6 +84,6 @@ def update_graph_scatter(input_data):
     return {'data': [data_plant_1, data_plant_2, data_plant_3],
             'layout' : go.Layout(xaxis=dict(range=[min(X),max(X)]),yaxis=dict(range=[0,100]),)}
 
-if _name_ == '_main_':
+if __name__ == '__main__':
     thread.start()
     app.run_server(host='0.0.0.0', port=8080)
