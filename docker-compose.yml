@@ -22,3 +22,6 @@ services:
      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
    ports:
      - '27017-27019:27017-27019'
+ mongo_handler:
+    build: ./mongo_handler
+    container_name: 'mongo_handler'
