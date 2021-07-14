@@ -1,5 +1,4 @@
 version: '3.6'
-<<<<<<< HEAD
 services:
  rabbitmq:
    image: rabbitmq:management
