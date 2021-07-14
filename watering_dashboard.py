@@ -9,7 +9,6 @@ from collections import deque
 import pika
 import sys
 import threading
-from time import gmtime, strftime
 from datetime import datetime
 
 
@@ -60,7 +59,7 @@ app.layout = html.Div(
         dcc.Graph(id='live-graph', animate=True),
         dcc.Interval(
             id='graph-update',
-            interval=1000 * 1 * 60
+            interval=1000 * 60
         ),
     ]
 )
