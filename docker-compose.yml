@@ -25,3 +25,9 @@ services:
  mongo_handler:
     build: ./mongo_handler
     container_name: 'mongo_handler'
+
+ watering_dashboard:
+    build: ./watering_dashboard
+    container_name: 'watering_dashboard'
+    ports:
+      - 8080:8080 

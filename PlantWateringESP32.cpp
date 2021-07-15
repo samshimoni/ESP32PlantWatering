@@ -10,8 +10,9 @@ const char* mqtt_user = "";
 const char* mqtt_pass= "";
 
 const u_int16_t mqtt_port = 1883;
-const u_int16_t diffTime = 3600;
+const u_int16_t one_hour = 3600;
 const u_int16_t sleepTimeInMinutes = 60;
+const u_int16_t one_day = 60 * 60 * 24;
 
 const int SensorPin1 = 33;
 const int SensorPin2 = 34;
@@ -28,6 +29,8 @@ u_int16_t soilMoistureValue3 = 0;
 time_t lastWateredPlant1 = time(0);
 time_t lastWateredPlant2 = time(0);
 time_t lastWateredPlant3 = time(0);
+
+time_t last_watered_daily = time(0);
 
 u_int16_t thresholdPlant1 = 50;
 u_int16_t thresholdPlant2 = 50;
@@ -105,7 +108,7 @@ void pump_water(int pump_number){
   delay(5000);  
   pinMode(pump_number, INPUT_PULLUP); 
   delay(1000);
-  sprintf(msg1, "plant %d was watered", pump_number);
+  sprintf(msg1, "watered:plant %d", pump_number);
   client.publish("amq.topic",  msg)
  }
 
@@ -141,6 +144,14 @@ void loop() {
   if (soilMoistureValue3 < 50 && (difftime( time(0), lastWateredPlant3) > diffTime)){
     pump_water(pump3);
     lastWateredPlant3 = time(0);
+  }
+
+  if (difftime(time(0), last_watered_daily) > one_day){
+        pump_water(pump1);
+        pump_water(pump2);
+        pump_water(pump3);
+
+        daily_watering = time(0);
   }
   
   sprintf(msg1, "plant1:%d", soilMoistureValue1);
