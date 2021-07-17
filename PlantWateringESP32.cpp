@@ -12,7 +12,7 @@ const char* mqtt_pass= "";
 const u_int16_t mqtt_port = 1883;
 const u_int16_t one_hour = 3600;
 const u_int16_t sleepTimeInMinutes = 60;
-const u_int16_t one_day = 60 * 60 * 24;
+const u_int32_t one_day = 60 * 60 * 24;
 
 const int SensorPin1 = 33;
 const int SensorPin2 = 34;
@@ -44,7 +44,6 @@ PubSubClient client(espClient);
 
 void callback(char* topic, byte* message, unsigned int length) {
   String messageTemp;
-  stringstream ss;
   int extracted_number;
   uint16_t newThreshold;
   for (int i = 0; i < length; i++) {
@@ -58,7 +57,7 @@ void callback(char* topic, byte* message, unsigned int length) {
         pump_water(pump3);
       }
     else{
-      print("Bad Input");
+      Serial.println("Bad Input");
     }
   }
 }
@@ -82,7 +81,7 @@ void reconnect() {
 
     if (client.connect("Arduino_Gas", mqtt_user, mqtt_pass)) {
       Serial.println("connected");
-      client.subscribe('esp.in');
+      client.subscribe("esp.in");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -108,8 +107,8 @@ void pump_water(int pump_number){
   delay(5000);  
   pinMode(pump_number, INPUT_PULLUP); 
   delay(1000);
-  sprintf(msg1, "watered:plant %d", pump_number);
-  client.publish("amq.topic",  msg)
+  sprintf(msg, "watered:plant %d", pump_number);
+  client.publish("amq.topic",  msg);
  }
 
 void loop() {
@@ -123,7 +122,7 @@ void loop() {
   soilMoistureValue1 = map(soilMoistureValue1, 3600, 1346, 0, 100);
   Serial.println(soilMoistureValue1);
   
-  if (soilMoistureValue1 < 50 && (difftime( time(0), lastWateredPlant1) > diffTime)){
+  if (soilMoistureValue1 < 50 && (difftime( time(0), lastWateredPlant1) > one_hour)){
     pump_water(pump1);
     lastWateredPlant1 = time(0);
   }
@@ -132,7 +131,7 @@ void loop() {
   soilMoistureValue2 = map(soilMoistureValue2, 3550, 1346, 0, 100);
   Serial.println(soilMoistureValue2);
 
-  if (soilMoistureValue2 < 50 && (difftime( time(0), lastWateredPlant2) > diffTime)){
+  if (soilMoistureValue2 < 50 && (difftime( time(0), lastWateredPlant2) > one_hour)){
     pump_water(pump2);
     lastWateredPlant2 = time(0);
   }
@@ -141,7 +140,7 @@ void loop() {
   soilMoistureValue3 = map(soilMoistureValue3, 2800, 1200, 0, 100);
   Serial.println(soilMoistureValue3);
 
-  if (soilMoistureValue3 < 50 && (difftime( time(0), lastWateredPlant3) > diffTime)){
+  if (soilMoistureValue3 < 50 && (difftime( time(0), lastWateredPlant3) > one_hour)){
     pump_water(pump3);
     lastWateredPlant3 = time(0);
   }
@@ -151,14 +150,14 @@ void loop() {
         pump_water(pump2);
         pump_water(pump3);
 
-        daily_watering = time(0);
+        last_watered_daily = time(0);
   }
   
   sprintf(msg1, "plant1:%d", soilMoistureValue1);
   sprintf(msg2, "plant2:%d", soilMoistureValue2);
   sprintf(msg3, "plant3:%d", soilMoistureValue3);
 
-  client.publish("amq.topic",  msg1)
+  client.publish("amq.topic",  msg1);
   client.publish("amq.topic",  msg2);
   client.publish("amq.topic",  msg3);
 
