@@ -2,6 +2,9 @@
 #include <WiFi.h>
 #include <ctime>
 
+#define ONE_SECOND (1000)
+#define ONE_MINUTE (ONE_SECOND * 60)
+#define ONE_HOUR (ONE_MINUTE * 60)
 
 const char* ssid = "";
 const char* password = "";
@@ -10,8 +13,6 @@ const char* mqtt_user = "";
 const char* mqtt_pass= "";
 
 const u_int16_t mqtt_port = 1883;
-const u_int16_t one_hour = 3600;
-const u_int16_t sleepTimeInMinutes = 60;
 const u_int32_t one_day = 60 * 60 * 24;
 
 const int SensorPin1 = 33;
@@ -32,9 +33,9 @@ time_t lastWateredPlant3 = time(0);
 
 time_t last_watered_daily = time(0);
 
-u_int16_t thresholdPlant1 = 50;
-u_int16_t thresholdPlant2 = 50;
-u_int16_t thresholdPlant3 = 50;
+u_int16_t thresholdPlant1 = 80;
+u_int16_t thresholdPlant2 = 80;
+u_int16_t thresholdPlant3 = 80;
 
 
 WiFiClient espClient;
@@ -104,9 +105,9 @@ void setup() {
 void pump_water(int pump_number){
   char msg[32];
   pinMode(pump_number, OUTPUT);
-  delay(5000);  
+  delay(ONE_SECOND * 5);  
   pinMode(pump_number, INPUT_PULLUP); 
-  delay(1000);
+  delay(ONE_SECOND);
   sprintf(msg, "watered:plant %d", pump_number);
   client.publish("amq.topic",  msg);
  }
@@ -122,7 +123,7 @@ void loop() {
   soilMoistureValue1 = map(soilMoistureValue1, 3600, 1346, 0, 100);
   Serial.println(soilMoistureValue1);
   
-  if (soilMoistureValue1 < 50 && (difftime( time(0), lastWateredPlant1) > one_hour)){
+  if (soilMoistureValue1 < thresholdPlant1 && (difftime( time(0), lastWateredPlant1) > one_hour)){
     pump_water(pump1);
     lastWateredPlant1 = time(0);
   }
@@ -131,7 +132,7 @@ void loop() {
   soilMoistureValue2 = map(soilMoistureValue2, 3550, 1346, 0, 100);
   Serial.println(soilMoistureValue2);
 
-  if (soilMoistureValue2 < 50 && (difftime( time(0), lastWateredPlant2) > one_hour)){
+  if (soilMoistureValue2 < thresholdPlant2 && (difftime( time(0), lastWateredPlant2) > one_hour)){
     pump_water(pump2);
     lastWateredPlant2 = time(0);
   }
@@ -140,7 +141,7 @@ void loop() {
   soilMoistureValue3 = map(soilMoistureValue3, 2800, 1200, 0, 100);
   Serial.println(soilMoistureValue3);
 
-  if (soilMoistureValue3 < 50 && (difftime( time(0), lastWateredPlant3) > one_hour)){
+  if (soilMoistureValue3 < thresholdPlant3 && (difftime( time(0), lastWateredPlant3) > one_hour)){
     pump_water(pump3);
     lastWateredPlant3 = time(0);
   }
@@ -161,5 +162,5 @@ void loop() {
   client.publish("amq.topic",  msg2);
   client.publish("amq.topic",  msg3);
 
-  delay(1000  * 1 * sleepTimeInMinutes);
+  delay(ONE_HOUR);
 }
