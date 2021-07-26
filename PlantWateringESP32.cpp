@@ -109,7 +109,7 @@ void pump_water(int pump_number){
   pinMode(pump_number, INPUT_PULLUP); 
   delay(ONE_SECOND);
   sprintf(msg, "watered:plant %d", pump_number);
-  client.publish("amq.topic",  msg);
+  client.publish("esp.watering",  msg);
  }
 
 void loop() {
@@ -158,9 +158,9 @@ void loop() {
   sprintf(msg2, "plant2:%d", soilMoistureValue2);
   sprintf(msg3, "plant3:%d", soilMoistureValue3);
 
-  client.publish("amq.topic",  msg1);
-  client.publish("amq.topic",  msg2);
-  client.publish("amq.topic",  msg3);
+  client.publish("esp.humidity",  msg1);
+  client.publish("esp.humidity",  msg2);
+  client.publish("esp.humidity",  msg3);
 
   delay(ONE_HOUR);
 }
