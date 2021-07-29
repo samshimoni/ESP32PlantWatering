@@ -9,14 +9,16 @@ from collections import deque
 import pika
 import sys
 import threading
-from datetime import datetime
+import datetime
 
 
 
 MAXLEN = 30
 
 X_AXIS = deque(maxlen=MAXLEN)
-time = datetime.now()
+time = datetime.datetime.utcnow()+datetime.timedelta(hours=3)
+
+
 X_AXIS.append(time.strftime('%H:%M'))
 
 Plant1_Y = deque(maxlen=MAXLEN)
@@ -29,7 +31,7 @@ Plant3_Y.append(0)
 
 def callback(ch, method, properties, body):
     if body.decode().startswith('plant'):
-        time = datetime.now().strftime('%H:%M')
+        time = (datetime.datetime.utcnow()+datetime.timedelta(hours=3)).strftime('%H:%M')
         if time not in X_AXIS:
             X_AXIS.append(time)
         if body.decode().startswith('plant1'):
@@ -41,7 +43,7 @@ def callback(ch, method, properties, body):
         if body.decode().startswith('plant3'):
             Plant3_Y.append(int(body.decode().split(':')[-1]))
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
+connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.0.0.10', port=5672))
 channel = connection.channel()
 
 channel.exchange_declare(exchange='amq.topic', exchange_type='topic', durable=True)
@@ -59,7 +61,7 @@ app.layout = html.Div(
         dcc.Graph(id='live-graph', animate=True),
         dcc.Interval(
             id='graph-update',
-            interval=1000 * 60
+            interval=1000 * 60 * 30
         ),
     ]
 )
@@ -81,7 +83,7 @@ def update_graph_scatter(input_data):
     data_plant_3 = plotly.graph_objs.Scatter(x=X, y=Y3, name='Plant3', mode= 'lines+markers')
 
     return {'data': [data_plant_1, data_plant_2, data_plant_3],
-            'layout' : go.Layout(xaxis=dict(range=[min(X),max(X)]),yaxis=dict(range=[0,100]),)}
+            'layout' : go.Layout(xaxis=dict(range=[min(X),max(X)]),yaxis=dict(range=[0,130]),)}
 
 if __name__ == '__main__':
     thread.start()
