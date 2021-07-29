@@ -12,4 +12,8 @@ docker-compose exec rabbitmq rabbitmqctl add_user $USERNAME $PASSWORD
 docker-compose exec rabbitmq rabbitmqctl set_permissions -p / $USERNAME ".*" ".*" ".*"
 docker-compose exec rabbitmq rabbitmqctl set_user_tags $USERNAME management
 
+docker-compose exec rabbitmq rabbitmqadmin declare exchange name=esp.humidity type=topic
+docker-compose exec rabbitmq rabbitmqadmin declare exchange name=esp.watering type=topic
+docker-compose exec rabbitmq rabbitmqadmin declare exchange name=esp.in type=topic
+
 
