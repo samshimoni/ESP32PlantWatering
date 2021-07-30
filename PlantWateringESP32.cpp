@@ -14,6 +14,7 @@ const char* mqtt_pass= "";
 
 const u_int16_t mqtt_port = 1883;
 const u_int32_t one_day = 60 * 60 * 24;
+const u_int_32_t one_hour = 60* 60;
 
 const int SensorPin1 = 33;
 const int SensorPin2 = 34;
